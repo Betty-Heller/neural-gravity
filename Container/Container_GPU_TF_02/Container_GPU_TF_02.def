@@ -1,0 +1,5 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/tensorflow:24.03-tf2-py3
+
+%runscript
+    echo "Running singularity container..."

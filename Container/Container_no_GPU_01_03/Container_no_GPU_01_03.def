@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: python:3.11.10-bookworm
+
+%post
+    pip install pyshtools 
+    pip install geopandas
+    pip install cartopy
+    pip install nexusformat
+
+%runscript
+    echo "Running singularity container..."
