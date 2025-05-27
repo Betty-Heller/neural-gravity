@@ -714,7 +714,7 @@ def RSS_n_plot(file_prediction,filename,colors_components,time_idx,pred_type,sub
     plt.yscale("log")  # plot on logarithmic scale
     plt.xlabel('SH degree', fontsize=labels_fontsize)
     plt.xlim([0,Nmax])
-    plt.ylabel('log(EWH in m)', fontsize=labels_fontsize)
+    plt.ylabel('EWH in m', fontsize=labels_fontsize)
     plt.ylim(y_range)
     plt.legend(bbox_to_anchor=(1,-0.15),loc='upper right',ncol=2,fontsize=labels_fontsize)
     plt.xticks(fontsize=ticklabels_fontsize)
