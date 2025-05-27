@@ -455,11 +455,11 @@ def generator_loss(input, gen_output, target):
 @tf.function()
 def random_jitter(input_image, real_image): # input_image, real_image are single samples (not batches of samples!)
     
-    ### Method 1: grow images to larger size and randomly crop back: ###
-    if v.data_augmentation[0] == 1:
+    ### Method 1: grow images to larger size and randomly crop back (example: v.data_augmentation[0] = 30): ###
+    if v.data_augmentation[0] != 0:
         print('Data augmentation method 1: grow images to larger size and randomly crop back')
-        height = dim + 30
-        width = dim + 30
+        height = dim + int(v.data_augmentation[0])
+        width = dim + int(v.data_augmentation[0])
         input_image = tf.image.resize(input_image, [height, width],
                                     method=tf.image.ResizeMethod.NEAREST_NEIGHBOR) # resizes to a larger image and transform numpy array to tf tensor
 
@@ -492,25 +492,25 @@ def random_jitter(input_image, real_image): # input_image, real_image are single
             input_image = tf.image.flip_up_down(input_image)
             real_image = tf.image.flip_up_down(real_image)
 
-    ### Method 4: adjust brightness (add a value delta to all pixel values): ###
-    if v.data_augmentation[3] == 1:
-        print('Data augmentation method 4: randomly add value between +- 0.0005 to the pixel values')
-        delta = tf.random.uniform(shape=(),minval=-0.005,maxval=0.005) # random number which is to be added to all channels of the input image
+    ### Method 4: adjust brightness (add a value delta to all pixel values) (example: v.data_augmentation[3] = 0.005): ###
+    if v.data_augmentation[3] != 0:
+        print('Data augmentation method 4: randomly add value between +- ', str(v.data_augmentation[3]), ' to the pixel values')
+        delta = tf.random.uniform(shape=(),minval=-1.0*v.data_augmentation[3],maxval=v.data_augmentation[3]) # random number which is to be added to all channels of the input image
 
         input_image = tf.image.adjust_brightness(input_image,delta*v.num_comp) # add delta*v.num_comp to the input image, such that it still corresponds to the sum of the individual target components
         real_image = tf.image.adjust_brightness(real_image,delta)
 
-    ### Method 5: adjust contrast (change the variance of the signals about their mean value): ###
+    ### Method 5: adjust contrast (change the variance of the signals about their mean value) (example: v.data_augmentation[4] = 0.5): ###
     # (contrast of the data before the contrast adjustment is "1",
-    # afterwards contrast is between 0.5 (=weaker signals) and 1.5 (=stronger signals): 
+    # afterwards contrast is between v.data_augmentation[4] (=weaker signals) and 1+v.data_augmentation[4] (=stronger signals): 
     # (x - mean) * contrast_factor + mean
     # and the signals' variations about their mean are also randomly multiplied by +- 1
-    if v.data_augmentation[4] == 1:
+    if v.data_augmentation[4] != 0:
         print('Data augmentation method 5: randomly change variation of signals about their mean')
         random_number = tf.random.uniform(shape=(),minval=-1,maxval=1) # random number between -1 and 1
         random_sign = random_number/tf.abs(random_number) # either -1 or 1 => giving a random sign
 
-        new_contrast = tf.random.uniform(shape=(),minval=0.5,maxval=1.5) * random_sign # scaling factor between -1.5 and -0.5 or between 0.5 and 1.5
+        new_contrast = tf.random.uniform(shape=(),minval=v.data_augmentation[4],maxval=1.0+v.data_augmentation[4]) * random_sign # scaling factor between -1.0-v.data_augmentation[4] and -v.data_augmentation[4] or between v.data_augmentation[4] and 1.0+v.data_augmentation[4]
 
         input_image = tf.image.adjust_contrast(input_image,new_contrast)
         real_image = tf.image.adjust_contrast(real_image,new_contrast) # input and target become stretched by same factor (sum of target channels should still correspond to input channel)
