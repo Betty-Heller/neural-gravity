@@ -76,7 +76,7 @@ weight_sum = [WEIGHT_SUM] # weight of sum loss term
 weights_slope_value = [WEIGHTS_SLOPE_VALUE] # weights of loss terms constraining the slope of the data along the time direction (for each component individually)
 weights_linear_shape = [WEIGHTS_LINEAR_SHAPE] # weights of loss terms constraining the linear shape of the data along the time direction (for each component individually)
 
-data_augmentation = [DATA_AUGMENTATION] # switch on (1) or off (0) the 5 data augmentation strategies applied to the data during training
+data_augmentation = [DATA_AUGMENTATION] # switch on (nonzero values) or off (0) the 5 data augmentation strategies applied to the data during training (example: [30,1,1,0.005,0.5])
 mult_factor_min_max = [MULT_FACTOR_MIN_MAX] # specifies the minimum and maximum factors for the "data augmentation applied to individual components by multiplication of a random factor"
 mult_comp = [MULT_COMP] # switch on (1) or off (0) the "data augmentation by multiplication of a random factor" for the individual components
 
