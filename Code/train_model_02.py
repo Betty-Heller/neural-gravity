@@ -451,71 +451,55 @@ def generator_loss(input, gen_output, target):
 
 
 # function needed to apply some noise to the training data before training (==> data augmentation)
-
 @tf.function()
-def random_jitter(input_image, real_image): # input_image, real_image are single samples (not batches of samples!)
-    
-    ### Method 1: grow images to larger size and randomly crop back (example: v.data_augmentation[0] = 30): ###
-    if v.data_augmentation[0] != 0:
+def random_jitter(target_comp, comp): # target is dim x dim x 1 tensor (single sample (not batch), single component)
+ 
+    ### Method 1: grow images to larger size and randomly crop back (example: v.augm_grow_crop[comp] = 30): ### 
+    if v.augm_grow_crop[comp] != 0:
         print('Data augmentation method 1: grow images to larger size and randomly crop back')
-        height = dim + int(v.data_augmentation[0])
-        width = dim + int(v.data_augmentation[0])
-        input_image = tf.image.resize(input_image, [height, width],
-                                    method=tf.image.ResizeMethod.NEAREST_NEIGHBOR) # resizes to a larger image and transform numpy array to tf tensor
+        height = dim + int(v.augm_grow_crop[comp])
+        width = dim + int(v.augm_grow_crop[comp])
 
         # first argument of tf.image.resize must be: 
         # 4-D Tensor of shape [batch, height, width, channels] 
         # or: 3-D Tensor of shape [height, width, channels]
-        real_image = tf.image.resize(real_image, [height, width],
-                                method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-        
-        stacked_image = tf.concat([input_image, real_image], axis=2) # use concat, as it can deal with tensors having different dimensions along axis=2
+        target_comp = tf.image.resize(target_comp, [height, width],method=tf.image.ResizeMethod.NEAREST_NEIGHBOR) # resizes to a larger image 
+        target_comp = tf.image.random_crop(target_comp, size=[dim, dim, 1]) # cropping back to get dimensions of dim x dim
 
-        cropped_image = tf.image.random_crop(stacked_image, size=[dim, dim, v.num_comp +1]) # cropping back to get dimensions of dim x dim
-
-        input_image = cropped_image[:,:,0] # subdividing back channels to input and output image
-        real_image = cropped_image[:,:,1:]
-
-        input_image = input_image[...,tf.newaxis] # adding "channel" axis to input image
-    
     ### Method 2: randomly do a left-right flip: ### 
-    if v.data_augmentation[1] == 1:
+    if v.augm_lr_flip[comp] == 1:
+        print('Data augmentation method 2: randomly do a left-right flip')
         if tf.random.uniform(()) > 0.5:
-            print('Data augmentation method 2: randomly do a left-right flip')
-            input_image = tf.image.flip_left_right(input_image)
-            real_image = tf.image.flip_left_right(real_image)
+            target_comp = tf.image.flip_left_right(target_comp)
 
     ### Method 3: randomly do a top-down flip: ###
-    if v.data_augmentation[2] == 1:
+    if v.augm_td_flip[comp] == 1:
+        print('Data augmentation method 3: randomly do a top-down flip')
         if tf.random.uniform(()) > 0.5:
-            print('Data augmentation method 3: randomly do a top-down flip')
-            input_image = tf.image.flip_up_down(input_image)
-            real_image = tf.image.flip_up_down(real_image)
+            target_comp = tf.image.flip_up_down(target_comp)
 
-    ### Method 4: adjust brightness (add a value delta to all pixel values) (example: v.data_augmentation[3] = 0.005): ###
-    if v.data_augmentation[3] != 0:
-        print('Data augmentation method 4: randomly add value between +- ', str(v.data_augmentation[3]), ' to the pixel values')
-        delta = tf.random.uniform(shape=(),minval=-1.0*v.data_augmentation[3],maxval=v.data_augmentation[3]) # random number which is to be added to all channels of the input image
+    ### Method 4: adjust brightness (add a value delta to all pixel values) (example: v.augm_add_value[comp] = 0.005): ###
+    if v.augm_add_value[comp] != 0:
+        print('Data augmentation method 4: randomly add value between +- ', str(v.augm_add_value[comp]), ' to the pixel values')
+        delta = tf.random.uniform(shape=(),minval=-1.0*v.augm_add_value[comp],maxval=v.augm_add_value[comp]) # random number which is to be added 
+        target_comp = tf.image.adjust_brightness(target_comp,delta)
 
-        input_image = tf.image.adjust_brightness(input_image,delta*v.num_comp) # add delta*v.num_comp to the input image, such that it still corresponds to the sum of the individual target components
-        real_image = tf.image.adjust_brightness(real_image,delta)
-
-    ### Method 5: adjust contrast (change the variance of the signals about their mean value) (example: v.data_augmentation[4] = 0.5): ###
-    # (contrast of the data before the contrast adjustment is "1",
-    # afterwards contrast is between v.data_augmentation[4] (=weaker signals) and 1+v.data_augmentation[4] (=stronger signals): 
-    # (x - mean) * contrast_factor + mean
-    # and the signals' variations about their mean are also randomly multiplied by +- 1
-    if v.data_augmentation[4] != 0:
-        print('Data augmentation method 5: randomly change variation of signals about their mean')
-        random_number = tf.random.uniform(shape=(),minval=-1,maxval=1) # random number between -1 and 1
+    ### Method 5: randomly change sign of the signal's variations about its mean value: ###
+    if v.augm_change_sign[comp] == 1:
+        print('Data augmentation method 5: randomly switch sign of variation of signal about its mean')
+        random_number = tf.random.uniform(shape=(),minval=-1,maxval=1,dtype=tf.dtypes.float64) # random number between -1 and 1
         random_sign = random_number/tf.abs(random_number) # either -1 or 1 => giving a random sign
+        target_comp = target_comp * random_sign
 
-        new_contrast = tf.random.uniform(shape=(),minval=v.data_augmentation[4],maxval=1.0+v.data_augmentation[4]) * random_sign # scaling factor between -1.0-v.data_augmentation[4] and -v.data_augmentation[4] or between v.data_augmentation[4] and 1.0+v.data_augmentation[4]
-
-        input_image = tf.image.adjust_contrast(input_image,new_contrast)
-        real_image = tf.image.adjust_contrast(real_image,new_contrast) # input and target become stretched by same factor (sum of target channels should still correspond to input channel)
-
-    return input_image, real_image
+    ### Method 6: adjust contrast (change the variance of the signal about its mean value) (example: augm_change_var_min=0.5, augm_change_var_max=2.): ###
+    # (contrast of the data before the contrast adjustment is "1",
+    # afterwards contrast is between v.augm_change_var_min (=weaker signals) and v.augm_change_var_max (=stronger signals)
+    if v.augm_change_var_max[comp] != 0:
+        print('Data augmentation method 6: randomly change amplitude of variation of signal about its mean')
+        new_contrast = tf.random.uniform(shape=(),minval=v.augm_change_var_min[comp],maxval=v.augm_change_var_max[comp])  # scaling factor between v.augm_change_var_min[comp] and v.augm_change_var_max[comp]
+        target_comp = tf.image.adjust_contrast(target_comp,new_contrast) # (x - mean) * contrast_factor + mean
+ 
+    return target_comp
 
 
 # function specifying the update of parameters in one training step
@@ -696,7 +680,7 @@ def fit(file_datasets):
 
 # function that collects input-target image data of one batch in tf.tensors -> creates 1 batch of training data
 # function is given (year,index)-pairs for all samples within the batch: e.g. sample_idc = [[1995,143],[1995,16],[1996,163],[1996,110]], if bs = 4
-# input_image and target are tf.tensors of shape (bs,256,256,1) and (bs,256,256,num_comp), data type float32 (contain data of 1 batch)
+# input_image and target are tf.tensors of shape (bs,dim,dim,1) and (bs,dim,dim,num_comp), data type float32 (contain data of 1 batch)
 
 def batch_data_from_h5py(filename,sample_idc):
 
@@ -710,21 +694,22 @@ def batch_data_from_h5py(filename,sample_idc):
         # collect the samples of the batch from the h5py file:
         for i in range(bs_local): # loop over samples in the batch
             group_name = str(sample_idc[i,0]) # e.g. '1996' -> the year of the i-th sample in the batch 
-            inp = f[group_name+'/input'][sample_idc[i,1],:,:] # sample_idc[i,1] is the index of the i-th sample in the batch within the year
-            inp = inp[...,tf.newaxis] # add "channels" axis to input image. of shape dim x dim x 1 -> is needed for tf.image.resize in random_jitter
-            tar = f[group_name+'/target'][sample_idc[i,1],:,:,:] # of shape dim x dim x num_comp
+            tar = f[group_name+'/target'][sample_idc[i,1],:,:,:] # sample_idc[i,1] is the index of the i-th sample in the batch within the year. tar is of shape dim x dim x num_comp
             
-            # special case of data augmentation: data of selected channels (as specified in v.mult_comp) is multiplied by random value between v.mult_factor_min_max[0] and v.mult_factor_min_max[1]  
+            # data augmentation (for each component separately):
+            list_comp = [] # collect the dim x dim tensors of the individual components in a list
             for comp in range(v.num_comp): 
-                if v.mult_comp[comp] == 1:
-                    factor = tf.random.uniform(shape=(),minval=v.mult_factor_min_max[0],maxval=v.mult_factor_min_max[1]) 
-                    inp[:,:,0] = inp[:,:,0] - tar[:,:,comp] + tar[:,:,comp] * factor
-                    tar[:,:,comp] = tar[:,:,comp] * factor
-
-            inp, tar = random_jitter(inp, tar)
-
-            inp_samples[i,:,:,:] = inp
-            tar_samples[i,:,:,:] = tar
+                target_comp = tar[:,:,comp] # dim x dim
+                target_comp = target_comp[...,tf.newaxis] # adding "channel" axis to image -> dim x dim x 1
+                target_comp = random_jitter(target_comp,comp)
+                list_comp.append(target_comp)
+            
+            tar_augm = tf.concat(list_comp, axis=2) # tensor of shape dim x dim x num_comp (augmented target tensor)
+            inp_augm = tf.math.reduce_sum(tar_augm,axis=2) # tensor of shape dim x dim (sum of augmented target channels)
+            inp_augm = inp_augm[...,tf.newaxis] # add "channels" axis to input image. of shape dim x dim x 1
+            
+            inp_samples[i,:,:,:] = inp_augm # i is the index of a sample within the batch
+            tar_samples[i,:,:,:] = tar_augm
 
     inp32 = np.float32(inp_samples)
     tar32 = np.float32(tar_samples)
@@ -820,9 +805,12 @@ with open(model_folder + '/info.txt', 'w') as f:
     f.write('- test_year = ' + v.test_year + '\n')
     f.write('- sampling method: sampling = ' + v.sampling + '\n')
     f.write('- random linear combination of samples: random_samples = ' + v.random_samples + '\n')
-    f.write('- switch on (1) or off (0) the 5 data augmentation strategies: data_augmentation = ' + ', '.join(list(map(str,v.data_augmentation))) + '\n')
-    f.write('- switch on (1) or off (0) the trend data augmentation for individual components: mult_comp = ' + ', '.join(list(map(str,v.mult_comp))) + '\n')
-    f.write('- Interval for random multiplication factor for trend data augmentation: mult_factor_min_max = ' + ', '.join(list(map(str,v.mult_factor_min_max))) + '\n')
+    f.write('- data augmentation by random growing and cropping: augm_grow_crop = ' + ', '.join(list(map(str,v.augm_grow_crop))) + '\n')
+    f.write('- data augmentation by random left-right flippling: augm_lr_flip = ' + ', '.join(list(map(str,v.augm_lr_flip))) + '\n')
+    f.write('- data augmentation by random top-down flippling: augm_td_flip = ' + ', '.join(list(map(str,v.augm_td_flip))) + '\n')
+    f.write('- data augmentation by random addition of value: augm_add_value = ' + ', '.join(list(map(str,v.augm_add_value))) + '\n')
+    f.write('- data augmentation by random change of sign: augm_change_sign = ' + ', '.join(list(map(str,v.augm_change_sign))) + '\n')
+    f.write('- data augmentation by random change of variation about mean: augm_change_var_min = ' + ', '.join(list(map(str,v.augm_change_var_min))) + ' , augm_change_var_max = ' + ', '.join(list(map(str,v.augm_change_var_max))) + ')\n')
     f.write('\n')
     f.write('### Training specifications: ###' + '\n')
     f.write('- dimensions of filters in convolutional layers: filter_size = ' + str(v.filter_size) + '\n')

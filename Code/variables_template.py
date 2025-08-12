@@ -76,9 +76,14 @@ weight_sum = [WEIGHT_SUM] # weight of sum loss term
 weights_slope_value = [WEIGHTS_SLOPE_VALUE] # weights of loss terms constraining the slope of the data along the time direction (for each component individually)
 weights_linear_shape = [WEIGHTS_LINEAR_SHAPE] # weights of loss terms constraining the linear shape of the data along the time direction (for each component individually)
 
-data_augmentation = [DATA_AUGMENTATION] # switch on (nonzero values) or off (0) the 5 data augmentation strategies applied to the data during training (example: [30,1,1,0.005,0.5])
-mult_factor_min_max = [MULT_FACTOR_MIN_MAX] # specifies the minimum and maximum factors for the "data augmentation applied to individual components by multiplication of a random factor"
-mult_comp = [MULT_COMP] # switch on (1) or off (0) the "data augmentation by multiplication of a random factor" for the individual components
+# variables regarding data augmentation (can switch them off by using zero values for all components):
+augm_grow_crop = [AUGM_GROW_CROP] # contains number of pixels to be added before cropping back; e.g., 30
+augm_lr_flip = [AUGM_LR_FLIP] # switch if left-right-flip should be randomly performed, e.g., 1
+augm_td_flip = [AUGM_TD_FLIP] # switch if top-down-flip should be randomly performed, e.g., 1
+augm_add_value = [AUGM_ADD_VALUE] # value to be added randomly, e.g., 0.005 (=> value between -0.005 and 0.005 will be added)
+augm_change_sign = [AUGM_CHANGE_SIGN] # switch if sign should be randomly changed, e.g., 1
+augm_change_var_min = [AUGM_CHANGE_VAR_MIN] # random change of variation of signal about its mean -> minimum value to be used, e.g., 0.5
+augm_change_var_max = [AUGM_CHANGE_VAR_MAX] # random change of variation of signal about its mean -> maximum value to be used, e.g., 2. (a value of 0 switches off this data augmentation method)
 
 """j
 derived parameters:

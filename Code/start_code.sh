@@ -47,15 +47,20 @@ random_samples='no'
 #loss_type='relative_MSE'
 loss_type='signal_weighted_MSE'
 
-# number of entries in "weights_comp", "weights_slope_value", "weights_linear_shape", "mult_comp" needs to fit the number of entries in "components"
+# number of entries in "weights_comp", "weights_slope_value", "weights_linear_shape" needs to fit the number of entries in "components"
 weights_comp=1.,1.,1.,1.
 weight_sum=0.
 weights_slope_value=0.,0.,0.,0.
 weights_linear_shape=0.,0.,0.,0.
 
-data_augmentation=0,0,0,0,0
-mult_factor_min_max=0.5,2.
-mult_comp=0,0,0,1
+# data augmentation strategies (number of entries needs to fit the number of entries in "components")
+augm_grow_crop=0,0,0,0
+augm_lr_flip=0,0,0,0
+augm_td_flip=0,0,0,0
+augm_add_value=0,0,0,0
+augm_change_sign=0,0,0,0
+augm_change_var_min=0,0,0,0.5
+augm_change_var_max=0,0,0,2.
 
 ########
 
@@ -88,9 +93,13 @@ sed -i 's/TEST_YEAR/'$test_year/ ../Models/$model_id/variables.py
 sed -i 's/SAMPLING/'$sampling/ ../Models/$model_id/variables.py
 sed -i 's/WEIGHTS_COMP/'$weights_comp/ ../Models/$model_id/variables.py
 sed -i 's/WEIGHT_SUM/'$weight_sum/ ../Models/$model_id/variables.py
-sed -i 's/DATA_AUGMENTATION/'$data_augmentation/ ../Models/$model_id/variables.py
-sed -i 's/MULT_FACTOR_MIN_MAX/'$mult_factor_min_max/ ../Models/$model_id/variables.py
-sed -i 's/MULT_COMP/'$mult_comp/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_GROW_CROP/'$augm_grow_crop/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_LR_FLIP/'$augm_lr_flip/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_TD_FLIP/'$augm_td_flip/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_ADD_VALUE/'$augm_add_value/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_CHANGE_SIGN/'$augm_change_sign/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_CHANGE_VAR_MIN/'$augm_change_var_min/ ../Models/$model_id/variables.py
+sed -i 's/AUGM_CHANGE_VAR_MAX/'$augm_change_var_max/ ../Models/$model_id/variables.py
 sed -i 's/LATLONT_STRING/'$latlont_string/ ../Models/$model_id/variables.py
 sed -i 's/WEIGHTS_SLOPE_VALUE/'$weights_slope_value/ ../Models/$model_id/variables.py
 sed -i 's/WEIGHTS_LINEAR_SHAPE/'$weights_linear_shape/ ../Models/$model_id/variables.py
