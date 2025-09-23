@@ -1,7 +1,7 @@
 # neural-gravity
 Source code for a neural network-based framework for signal separation in spatio-temporal gravity data
 
-Reference: This is the source code to the manuscript "Neural network framework for gravity signal separation" by Heller-Kaikov et al., submitted to Computers & Geosciences in 2024
+Reference: This is the source code to the manuscript "Neural network framework for gravity signal separation" by Heller-Kaikov et al., accepted by Computers & Geosciences in 2025
 
 Contact: betty.heller@tum.de
 
