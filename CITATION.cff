@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Heller-Kaikov"
+  given-names: "Betty"
+  orcid: "https://orcid.org/0000-0003-3056-9508"
+- family-names: "Pail"
+  given-names: "Roland"
+  orcid: "https://orcid.org/0000-0002-4364-4012"
+- family-names: "Werner"
+  given-names: "Martin"
+  orcid: "https://orcid.org/0000-0002-6951-8022"
+title: "Neural network framework for gravity signal separation (software)"
+version: 1.0
+doi: 10.5281/zenodo.17182343
+date-released: 2025-09-23
+url: "https://github.com/Betty-Heller/neural-gravity"
