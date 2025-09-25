@@ -4,6 +4,7 @@ Source code for a neural network-based framework for signal separation in spatio
 doi: [![DOI](https://zenodo.org/badge/901783924.svg)](https://doi.org/10.5281/zenodo.17182343)
 
 Reference: This is the source code to the manuscript 
+
 B. Heller-Kaikov, R. Pail and M. Werner, Neural network-based framework for signal separation in spatio-temporal gravity data. Computers and Geosciences (2025), doi: https://doi.org/10.1016/j.cageo.2025.106057
 
 Contact: betty.heller@tum.de
